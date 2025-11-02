@@ -1,8 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.10'
+            args '-u root'   // allows installing packages if needed
+        }
+    }
 
     environment {
-        IMAGE = "manavmain/jenkins-python-ci"
+        IMAGE = "manavmain/jenkins-python-ci"   // your docker image name
     }
 
     stages {
@@ -13,8 +18,9 @@ pipeline {
             }
         }
 
-        stage('Install & Test') {
+        stage('Install Dependencies & Run Tests') {
             steps {
+                sh 'pip install --upgrade pip'
                 sh 'pip install -r requirements.txt'
                 sh 'pytest -v'
             }
@@ -28,8 +34,8 @@ pipeline {
 
         stage('Login & Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKERHUB_USR', passwordVariable: 'DOCKERHUB_PSW')]) {
-                    sh "echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', manavmain: 'DOCKER_USER', Manav@2205: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $manavmain --password-Manav@2205'
                     sh "docker push $IMAGE:latest"
                 }
             }
@@ -41,47 +47,8 @@ pipeline {
             echo "✅ Pipeline completed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed! Check logs."
+            echo "❌ Pipeline failed!"
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
