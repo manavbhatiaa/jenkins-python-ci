@@ -1,28 +1,23 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10'
-            args '-u root'   // allows installing packages if needed
-        }
-    }
+    agent any
 
     environment {
-        IMAGE = "manavmain/jenkins-python-ci"   // your docker image name
+        IMAGE = "manavmain/jenkins-python-ci"
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
                 git url: 'https://github.com/manavbhatiaa/jenkins-python-ci.git', branch: 'main'
             }
         }
 
-        stage('Install Dependencies & Run Tests') {
+        stage('Install & Test') {
             steps {
-                sh 'pip install --upgrade pip'
-                sh 'pip install -r requirements.txt'
-                sh 'pytest -v'
+                sh '''
+                pip install -r requirements.txt
+                pytest -v
+                '''
             }
         }
 
@@ -34,10 +29,8 @@ pipeline {
 
         stage('Login & Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh "docker push $IMAGE:latest"
-                }
+                sh "echo Manav@2205 | docker login -u manavmain --password-stdin"
+                sh "docker push $IMAGE:latest"
             }
         }
     }
@@ -51,3 +44,4 @@ pipeline {
         }
     }
 }
+
